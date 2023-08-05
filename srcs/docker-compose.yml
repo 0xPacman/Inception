@@ -1,0 +1,129 @@
+version: "3.8"
+
+networks:
+  mynet:
+    driver: bridge
+
+volumes:
+  mariadb:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ahjadani/data/db
+      o: bind
+  wordpress:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/ahjadani/data/wp
+      o: bind
+
+services:
+  mariadb:
+    container_name: mariadb
+    build: ./requirements/mariadb
+    image: mariadb
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - mariadb:/var/lib/mysql
+    networks:
+      - mynet
+    env_file:
+      - .env
+  wordpress:
+    container_name: wordpress
+    build: ./requirements/wordpress
+    image: wordpress
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - wordpress:/var/www/html/wordpress
+    networks:
+      - mynet
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+  ngnix:
+    container_name: nginx
+    build: ./requirements/nginx
+    image: nginx
+    restart: always
+    ports:
+      - 443:443
+    volumes:
+      - wordpress:/var/www/html/wordpress
+    networks:
+      - mynet
+    env_file:
+      - .env
+    depends_on:
+      - wordpress
+  redis:
+    container_name: redis
+    build: ./requirements/bonus/redis
+    image: redis
+    restart: always
+    volumes:
+      - wordpress:/var/www/html/wordpress
+    ports:
+      - 6379:6379
+    networks:
+      - mynet
+    env_file:
+      - .env
+    depends_on:
+      - wordpress
+  adminer:
+    container_name: adminer
+    build: ./requirements/bonus/adminer
+    image: adminer
+    restart: always
+    ports:
+      - 3111:3111
+    networks:
+      - mynet
+    env_file:
+      - .env
+    depends_on:
+      - mariadb
+  ftp:
+    container_name: ftp
+    build: ./requirements/bonus/ftp
+    image: ftp
+    restart: always
+    ports:
+      - 2121:2121
+    volumes:
+      - wordpress:/var/www/html/wordpress
+    networks:
+      - mynet
+    env_file:
+      - .env
+    depends_on:
+      - wordpress
+  static:
+    container_name: static
+    build: ./requirements/bonus/static
+    image: static
+    restart: always
+    ports:
+      - 3333:3333
+    networks:
+      - mynet
+    env_file:
+      - .env
+  monitor:
+    container_name: monitor
+    build: ./requirements/bonus/monitor
+    image: monitor
+    restart: always
+    ports:
+      - 8080:8080
+    networks:
+      - mynet
+    env_file:
+      - .env

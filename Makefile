@@ -1,23 +1,27 @@
 all:
-	@sudo docker-compose -f ./srcs/docker-compose.yml up -d
+	@sudo docker-compose -f ./srcs/docker-compose.yml up --build -d
 up:
 	@sudo docker-compose -f ./srcs/docker-compose.yml up -d
 down:
 	@sudo docker-compose -f ./srcs/docker-compose.yml down
 build:
 	@sudo docker-compose -f ./srcs/docker-compose.yml build
-re:
-	@sudo docker-compose -f ./srcs/docker-compose.yml up --build
+re: clean
+	@sudo docker-compose -f ./srcs/docker-compose.yml up --build -d
 logs:
 	@sudo docker-compose -f ./srcs/docker-compose.yml logs
 list:
 	@sudo docker ps
 vol:
-	@mkdir /home/$USER/data /home/$USER/data/db /home/$USER/data/wp
+	@mkdir /home/$(USER)/data
+	@mkdir /home/$(USER)/data/db
+	@mkdir /home/$(USER)/data/wp
 clean:
-	@sudo docker-compose -f ./srcs/docker-compose.yml down -v
-	@sudo docker system prune -f
-	@sudo docker image rm $$(sudo docker images -qa)
+	- @sudo docker-compose -f ./srcs/docker-compose.yml down -v
+	- @sudo docker system prune -f
+	- @sudo docker image rm $$(sudo docker images -qa)
+	- @sudo rm -rf /home/$(USER)/data/db/*
+	- @sudo rm -rf /home/$(USER)/data/wp/*
 help:
 	@echo "Makefile commonds:"
 	@echo "up	bing up the containers"
